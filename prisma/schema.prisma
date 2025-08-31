@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  Listing   Listing[]
+  Order     Order[]
+}
+
+model Currency {
+  id       String    @id @default(uuid())
+  name     String
+  listings Listing[]
+}
+
+model Listing {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Float
+
+  currencyId  String
+  currency    Currency @relation(fields: [currencyId], references: [id])
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime @default(now())
+  orders      Order[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  listingId   String
+  listing     Listing     @relation(fields: [listingId], references: [id])
+  buyerId     String
+  buyer       User        @relation(fields: [buyerId], references: [id])
+  amountCents Int
+  paymentType PaymentType
+  state       OrderState
+  createdAt   DateTime    @default(now())
+}
+
+enum PaymentType {
+  COD
+  TRANSFER_QR
+}
+
+enum OrderState {
+  CREATED
+  ACCEPTED
+  DELIVERED
+  DISPUTED
+}
